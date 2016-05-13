@@ -6,6 +6,7 @@ class Reversi:
     pieces = []
     previewPiece = None
     turn = "white"
+    validPositions = []
 
     def __init__(self, master):
         # Initialize window
@@ -39,10 +40,11 @@ class Reversi:
     def initializeBoard(self):
         self.turn = "white"
         self.pieces = [[None for x in range(8)] for y in range(8)]
-        self.pieces[3][3] = self.canvas.create_oval(0, 0, 0, 0, fill="white")
-        self.pieces[3][4] = self.canvas.create_oval(0, 0, 0, 0, fill="black")
-        self.pieces[4][3] = self.canvas.create_oval(0, 0, 0, 0, fill="black")
-        self.pieces[4][4] = self.canvas.create_oval(0, 0, 0, 0, fill="white")
+        self.pieces[3][3] = self.canvas.create_oval(0, 0, 0, 0, fill="white", tags="piece")
+        self.pieces[3][4] = self.canvas.create_oval(0, 0, 0, 0, fill="black", tags="piece")
+        self.pieces[4][3] = self.canvas.create_oval(0, 0, 0, 0, fill="black", tags="piece")
+        self.pieces[4][4] = self.canvas.create_oval(0, 0, 0, 0, fill="white", tags="piece")
+        self.canvas.tag_bind("piece", "<Enter>", self.onEnter)
         self.toggleTurn()
         self.draw(None)
 
@@ -63,7 +65,10 @@ class Reversi:
         x, y = self.getBoardPos(event.x, event.y)
         square = self.board[x][y]
         piece = self.pieces[x][y]  # Piece may be null(None)
-        if True:  # to do: (if valid move toggle turn and reverse pieces)
+        if self.previewPiece is not None:
+            self.canvas.delete(self.previewPiece)
+            self.previewPiece = None
+            self.placePieceAndReverseColors(x, y)
             self.toggleTurn()
 
     # fires when the mouse enters a square of the board
@@ -75,10 +80,12 @@ class Reversi:
         if self.turn == "black":
             color = "gray20"
         self.canvas.delete(self.previewPiece)
-        self.previewPiece = self.canvas.create_oval(self.canvas.coords(square), fill=color)
-        self.canvas.tag_bind(self.previewPiece, "<Button-1>", self.selectPosition)
+        self.previewPiece = None
+        if self.validPositions.__contains__([x, y]):
+            self.previewPiece = self.canvas.create_oval(self.canvas.coords(square), fill=color)
+            self.canvas.tag_bind(self.previewPiece, "<Button-1>", self.selectPosition)
 
-    # fires when the mouse leaves a square of the board
+    # fires when the mouse leaves the board
     def onLeave(self, event):
         x, y = self.getBoardPos(event.x, event.y)
         square = event.widget.find_closest(event.x, event.y)[0]
@@ -94,13 +101,27 @@ class Reversi:
     # Change the turn from white to black or black to white
     def toggleTurn(self):
         if self.turn == "white":
-            self.canvas.tag_unbind("white", "<Button-1>")
             self.turnLabel.config(text="Black player's turn.")
             self.turn = "black"
         else:
-            self.canvas.tag_unbind("black", "<Button-1>")
             self.turnLabel.config(text="White player's turn.")
             self.turn = "white"
+        # Build validPositions
+        self.validPositions = []
+        for i in range(8):
+            for j in range(8):
+                if self.validPosition(i, j):
+                    self.validPositions.append([i, j])
+
+    # Checks if a position is valid
+    def validPosition(self, x, y):
+        piece = self.pieces[x][y]
+        if piece is None:
+            return True
+
+    # Places the piece and reverses appropriate pieces
+    def placePieceAndReverseColors(self, x, y):
+        return
 
 if __name__ == '__main__':
     # Initialize GUI
