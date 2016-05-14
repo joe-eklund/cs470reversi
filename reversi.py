@@ -126,8 +126,6 @@ class Reversi:
                             if nextPiece is not None and self.canvas.gettags(nextPiece)[1] != self.turn:
                                     k = 2
                                     while 0 <= x+(i*k) < 8 and 0<=y+(j*k)<8:
-                                        # if self.pieces[x+(i*k)][y+(j*k)] is None:
-                                        #     return False
                                         if self.pieces[x+(i*k)][y+(j*k)] is not None and self.canvas.gettags(self.pieces[x+(i*k)][y+(j*k)])[1] == self.turn:
                                             return True
                                         k+=1
