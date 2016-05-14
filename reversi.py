@@ -40,10 +40,10 @@ class Reversi:
     def initializeBoard(self):
         self.turn = "white"
         self.pieces = [[None for x in range(8)] for y in range(8)]
-        self.pieces[3][3] = self.canvas.create_oval(0, 0, 0, 0, fill="white", tags="piece")
-        self.pieces[3][4] = self.canvas.create_oval(0, 0, 0, 0, fill="black", tags="piece")
-        self.pieces[4][3] = self.canvas.create_oval(0, 0, 0, 0, fill="black", tags="piece")
-        self.pieces[4][4] = self.canvas.create_oval(0, 0, 0, 0, fill="white", tags="piece")
+        self.pieces[3][3] = self.canvas.create_oval(0, 0, 0, 0, fill="white", tags=("piece","white"))
+        self.pieces[3][4] = self.canvas.create_oval(0, 0, 0, 0, fill="black", tags=("piece","black"))
+        self.pieces[4][3] = self.canvas.create_oval(0, 0, 0, 0, fill="black", tags=("piece","black"))
+        self.pieces[4][4] = self.canvas.create_oval(0, 0, 0, 0, fill="white", tags=("piece","white"))
         self.canvas.tag_bind("piece", "<Enter>", self.onEnter)
         self.toggleTurn()
         self.draw(None)
@@ -117,7 +117,20 @@ class Reversi:
     def validPosition(self, x, y):
         piece = self.pieces[x][y]
         if piece is None:
-            return True
+            for i in range(-1,2):
+                if x+i >= 0 and x+i < 8:
+                    for j in range(-1,2):
+                        if y+j >= 0 and y+j < 8:
+                            nextPiece = self.pieces[x+i][y+j]
+                            if nextPiece is not None and self.canvas.gettags(nextPiece)[1] != self.turn:
+                                k = 2
+                                while 0 <= x+(i*k) < 8 and 0<=y+(j*k)<8:
+                                    if self.pieces[x+(i*k)][y+(j*k)] is None:
+                                        return False
+                                    elif self.canvas.gettags(self.pieces[x+(i*k)][y+(j*k)])[1] == self.turn:
+                                        return True
+                                    k+=1
+        return False
 
     # Places the piece and reverses appropriate pieces
     def placePieceAndReverseColors(self, x, y):
