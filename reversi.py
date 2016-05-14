@@ -112,6 +112,7 @@ class Reversi:
             for j in range(8):
                 if self.validPosition(i, j):
                     self.validPositions.append([i, j])
+        print self.validPositions
 
     # Checks if a position is valid
     def validPosition(self, x, y):
@@ -123,17 +124,40 @@ class Reversi:
                         if y+j >= 0 and y+j < 8:
                             nextPiece = self.pieces[x+i][y+j]
                             if nextPiece is not None and self.canvas.gettags(nextPiece)[1] != self.turn:
-                                k = 2
-                                while 0 <= x+(i*k) < 8 and 0<=y+(j*k)<8:
-                                    if self.pieces[x+(i*k)][y+(j*k)] is None:
-                                        return False
-                                    elif self.canvas.gettags(self.pieces[x+(i*k)][y+(j*k)])[1] == self.turn:
-                                        return True
-                                    k+=1
+                                    k = 2
+                                    while 0 <= x+(i*k) < 8 and 0<=y+(j*k)<8:
+                                        # if self.pieces[x+(i*k)][y+(j*k)] is None:
+                                        #     return False
+                                        if self.pieces[x+(i*k)][y+(j*k)] is not None and self.canvas.gettags(self.pieces[x+(i*k)][y+(j*k)])[1] == self.turn:
+                                            return True
+                                        k+=1
         return False
 
     # Places the piece and reverses appropriate pieces
     def placePieceAndReverseColors(self, x, y):
+        # Change in x
+        for i in range(-1,2):
+                if 0 <= x+i < 8:
+                    # Change in y
+                    for j in range(-1,2):
+                        if 0<=y+j<8:
+                            validPath = False
+                            k = 1
+                            nextPiece = self.pieces[x+(i*k)][y+(j*k)]
+                            while nextPiece is not None and self.canvas.gettags(nextPiece)[1] != self.turn and 0 <= x+(i*k) < 8 and 0<=y+(j*k)<8:
+                                k+=1
+                                if 0 <= x+(i*k) < 8 and 0<=y+(j*k)<8:
+                                    nextPiece = self.pieces[x+(i*k)][y+(j*k)]
+                                else:
+                                    nextPiece = None
+                            if nextPiece is not None and self.canvas.gettags(nextPiece)[1] == self.turn:
+                                self.pieces[x][y] = self.canvas.create_oval(0,0,0,0,fill=self.turn,tags=("piece",self.turn))
+                                for l in range(1,k):
+                                    currentPiece = self.pieces[x+(i*l)][y+(j*l)]
+                                    self.canvas.delete(currentPiece)
+                                    self.pieces[x+(i*l)][y+(j*l)] = None
+                                    self.pieces[x+(i*l)][y+(j*l)] = self.canvas.create_oval(0,0,0,0,fill=self.turn,tags=("piece",self.turn))
+        self.draw(None)
         return
 
 if __name__ == '__main__':
