@@ -1,5 +1,5 @@
 from Tkinter import *
-
+import tkMessageBox
 
 class Reversi:
     board = []
@@ -7,6 +7,7 @@ class Reversi:
     previewPiece = None
     turn = "white"
     validPositions = []
+    status = False
 
     def __init__(self, master):
         self.debug = True
@@ -135,6 +136,8 @@ class Reversi:
         # If there are no valid moves, toggle turn.
         if len(self.validPositions) == 0 and stop == False:
             self.toggleTurn()
+        elif len(self.validPositions) == 0 and stop == True:
+            self.displayWinner()
         self.score()
     # Checks if a position is valid
     def validPosition(self, x, y):
@@ -193,6 +196,15 @@ class Reversi:
         self.whiteScore.config(text="White Score: " + str(whiteCount))
         self.blackScore.config(text="Black Score: " + str(blackCount))
         return whiteCount,blackCount
+
+    def displayWinner(self):
+        whiteCount, blackCount = self.score()
+        if(whiteCount > blackCount):
+            tkMessageBox.showinfo("Game Over", "White wins!")
+        elif(blackCount > whiteCount):
+            tkMessageBox.showinfo("Game Over", "Black wins!")
+        else:
+            tkMessageBox.showinfo("Game Over", "It's a tie!")
 
 if __name__ == '__main__':
     # Initialize GUI
