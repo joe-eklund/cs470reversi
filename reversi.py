@@ -1,6 +1,7 @@
 from Tkinter import *
 import Tkinter as tk
 import tkMessageBox
+import copy
 
 class Reversi:
     board = []
@@ -206,6 +207,15 @@ class Reversi:
             tkMessageBox.showinfo("Game Over", "Black wins!")
         else:
             tkMessageBox.showinfo("Game Over", "It's a tie!")
+    # Pruning
+    def alphabeta(self,node, depth, alpha, beta, maximizingPlayer):
+        return
+
+class Node:
+    reversi = None
+
+    def __init__(self, reversi):
+        self.reversi = copy.deepcopy(reversi)
 
 if __name__ == '__main__':
     # Initialize GUI
