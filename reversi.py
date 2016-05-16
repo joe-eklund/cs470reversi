@@ -115,6 +115,10 @@ class Reversi:
         else:
             self.turnLabel.config(text="White player's turn.")
             self.turn = "white"
+        # Check for skipping turn
+        stop = False
+        if len(self.validPositions) == 0:
+            stop = True
         # Build validPositions
         self.validPositions = []
         for i in range(8):
@@ -122,6 +126,9 @@ class Reversi:
                 if self.validPosition(i, j):
                     self.validPositions.append([i, j])
         print self.validPositions
+        # If there are no valid moves, toggle turn.
+        if len(self.validPositions) == 0 and stop == False:
+            self.toggleTurn()
 
     # Checks if a position is valid
     def validPosition(self, x, y):
@@ -166,6 +173,18 @@ class Reversi:
                                     self.pieces[x+(i*l)][y+(j*l)] = self.canvas.create_oval(0,0,0,0,fill=self.turn,tags=("piece",self.turn))
         self.draw(None)
         return
+
+    def score(self):
+        whiteCount = 0
+        blackCount = 0
+        for x in range(8):
+            for y in range(8):
+                if self.pieces[x][y] is not None:
+                    if self.canvas.gettags(self.pieces[x][y])[1] == "white":
+                        whiteCount += 1
+                    else:
+                        blackCount += 1
+        return whiteCount,blackCount
 
 if __name__ == '__main__':
     # Initialize GUI
