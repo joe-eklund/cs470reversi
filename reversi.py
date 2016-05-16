@@ -9,6 +9,7 @@ class Reversi:
     previewPiece = None
     turn = "white"
     validPositions = []
+    ai = "black"
 
     def __init__(self, master):
         self.debug = True
@@ -84,6 +85,7 @@ class Reversi:
             self.canvas.delete(self.previewPiece)
             self.previewPiece = None
             self.placePieceAndReverseColors(x, y)
+            self.draw(None)
             self.toggleTurn()
 
     # fires when the mouse enters a square of the board
@@ -140,7 +142,8 @@ class Reversi:
             self.toggleTurn()
         elif len(self.validPositions) == 0 and stop == True:
             self.displayWinner()
-        self.score()
+        if self.turn == self.ai:
+            self.aiTurn()
     # Checks if a position is valid
     def validPosition(self, x, y):
         piece = self.pieces[x][y]
@@ -182,8 +185,6 @@ class Reversi:
                                     self.canvas.delete(currentPiece)
                                     self.pieces[x+(i*l)][y+(j*l)] = None
                                     self.pieces[x+(i*l)][y+(j*l)] = self.canvas.create_oval(0,0,0,0,fill=self.turn,tags=("piece",self.turn))
-        self.draw(None)
-        return
 
     def score(self):
         whiteCount = 0
@@ -207,8 +208,39 @@ class Reversi:
             tkMessageBox.showinfo("Game Over", "Black wins!")
         else:
             tkMessageBox.showinfo("Game Over", "It's a tie!")
+
+    # AI turn
+    def aiTurn(self):
+        root = Node(self)
+
+        value = self.alphabeta(root,5,-sys.maxint,sys.maxint,True)
     # Pruning
     def alphabeta(self,node, depth, alpha, beta, maximizingPlayer):
+        if depth == 0 or len(node.reversi.validPositions) == 0:
+            whiteCount,blackCount = node.reversi.score()
+            return blackCount - whiteCount
+        if maximizingPlayer:
+            v = -sys.maxint
+            for i in range(len(node.reversi.validPositions)):
+                x = node.reversi.validPositions[i][0]
+                y = node.reversi.validPositions[i][1]
+                newNode = Node(node.reversi.placePieceAndReverseColors(x,y))
+                v = max(v,self.alphabeta(newNode,depth-1,alpha, beta, not maximizingPlayer))
+                alpha = max(alpha,v)
+                if beta <= alpha:
+                    break
+            return v
+        else:
+            v = sys.maxint
+            for i in range(len(node.reversi.validPositions)):
+                x = node.reversi.validPositions[i][0]
+                y = node.reversi.validPositions[i][1]
+                newNode = Node(node.reversi.placePieceAndReverseColors(x,y))
+                v = min(v, self.alphabeta(node,depth-1,alpha, beta, not maximizingPlayer))
+                beta = min(beta,v)
+                if beta <= alpha:
+                    break
+            return v
         return
 
 class Node:
