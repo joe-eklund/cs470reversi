@@ -1,4 +1,5 @@
 from Tkinter import *
+import Tkinter as tk
 import tkMessageBox
 
 class Reversi:
@@ -7,7 +8,6 @@ class Reversi:
     previewPiece = None
     turn = "white"
     validPositions = []
-    status = False
 
     def __init__(self, master):
         self.debug = True
@@ -20,15 +20,16 @@ class Reversi:
         self.greet_button = Button(master, text="Start New Game", command=self.initializeBoard)
         self.greet_button.pack()
 
+        labelframe = tk.Frame()
+        self.whiteScore = tk.Label(labelframe,text="White Score: 2", relief=SUNKEN)
+        self.blackScore = tk.Label(labelframe,text=" || Black Score: 2", relief=SUNKEN)
         # Turn Label
-        self.turnLabel = Label(master, text="")
-        self.turnLabel.pack()
-        #White score label
-        self.whiteScore = Label(master,text="White Score: 2")
-        self.whiteScore.pack()
-        #Black score label
-        self.blackScore = Label(master,text="Black Score: 2")
-        self.blackScore.pack()
+        self.turnLabel = tk.Label(labelframe, text="",relief=SUNKEN)
+
+        self.whiteScore.grid(row=0, column=0)
+        self.turnLabel.grid(row=0, column=1)
+        self.blackScore.grid(row=0, column=2)
+        labelframe.pack()
 
         # Game Board
         self.canvas = Canvas(root, bg="darkgreen", height=640, width=640)
@@ -193,8 +194,8 @@ class Reversi:
                         whiteCount += 1
                     else:
                         blackCount += 1
-        self.whiteScore.config(text="White Score: " + str(whiteCount))
-        self.blackScore.config(text="Black Score: " + str(blackCount))
+        self.whiteScore.config(text="White Score: " + str(whiteCount), relief=SUNKEN)
+        self.blackScore.config(text="Black Score: " + str(blackCount), relief=SUNKEN)
         return whiteCount,blackCount
 
     def displayWinner(self):
