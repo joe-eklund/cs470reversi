@@ -9,6 +9,8 @@ class Reversi:
     validPositions = []
 
     def __init__(self, master):
+        self.debug = True
+        if self.debug: print 'Starting up game.'
         # Initialize window
         self.master = master
         master.title("Reversi")
@@ -38,6 +40,7 @@ class Reversi:
 
     # Bring the board to it's starting state
     def initializeBoard(self):
+        if self.debug: print 'Initializing board.'
         self.turn = "white"
         self.canvas.delete("piece") #Added to delete all the pieces when we click new game. 
         self.pieces = [[None for x in range(8)] for y in range(8)]
@@ -51,7 +54,7 @@ class Reversi:
 
     # Redraw the board
     def draw(self, event):
-
+        if self.debug: print 'Redrawing board.'
         width = self.canvas.winfo_width() - 1
         height = self.canvas.winfo_height() - 1
         for i in range(8):
@@ -66,6 +69,7 @@ class Reversi:
     def selectPosition(self, event):
         x, y = self.getBoardPos(event.x, event.y)
         square = self.board[x][y]
+        if self.debug: print 'Position selected: [' + str(x) + ', ' + str(y) + ']'
         piece = self.pieces[x][y]  # Piece may be null(None)
         if self.previewPiece is not None:
             self.canvas.delete(self.previewPiece)
@@ -76,6 +80,7 @@ class Reversi:
     # fires when the mouse enters a square of the board
     def onEnter(self, event):
         x, y = self.getBoardPos(event.x, event.y)
+        #if self.debug: print 'Position hovered: [' + str(x) + ', ' + str(y) + ']'
         square = self.board[x][y]
         piece = self.pieces[x][y]  # Piece may be null(None)
         color = "gray"
@@ -90,6 +95,7 @@ class Reversi:
     # fires when the mouse leaves the board
     def onLeave(self, event):
         x, y = self.getBoardPos(event.x, event.y)
+        #if self.debug: print 'Position left: [' + str(x) + ', ' + str(y) + ']'
         square = event.widget.find_closest(event.x, event.y)[0]
         self.canvas.delete(self.previewPiece)
         self.previewPiece = None
@@ -102,6 +108,7 @@ class Reversi:
 
     # Change the turn from white to black or black to white
     def toggleTurn(self):
+        if self.debug: print 'Toggling turn.'
         if self.turn == "white":
             self.turnLabel.config(text="Black player's turn.")
             self.turn = "black"
