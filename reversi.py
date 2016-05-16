@@ -22,6 +22,12 @@ class Reversi:
         # Turn Label
         self.turnLabel = Label(master, text="")
         self.turnLabel.pack()
+        #White score label
+        self.whiteScore = Label(master,text="White Score: 2")
+        self.whiteScore.pack()
+        #Black score label
+        self.blackScore = Label(master,text="Black Score: 2")
+        self.blackScore.pack()
 
         # Game Board
         self.canvas = Canvas(root, bg="darkgreen", height=640, width=640)
@@ -129,7 +135,7 @@ class Reversi:
         # If there are no valid moves, toggle turn.
         if len(self.validPositions) == 0 and stop == False:
             self.toggleTurn()
-
+        self.score()
     # Checks if a position is valid
     def validPosition(self, x, y):
         piece = self.pieces[x][y]
@@ -184,6 +190,8 @@ class Reversi:
                         whiteCount += 1
                     else:
                         blackCount += 1
+        self.whiteScore.config(text="White Score: " + str(whiteCount))
+        self.blackScore.config(text="Black Score: " + str(blackCount))
         return whiteCount,blackCount
 
 if __name__ == '__main__':
