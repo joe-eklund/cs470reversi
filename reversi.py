@@ -39,6 +39,7 @@ class Reversi:
     # Bring the board to it's starting state
     def initializeBoard(self):
         self.turn = "white"
+        self.canvas.delete("piece") #Added to delete all the pieces when we click new game. 
         self.pieces = [[None for x in range(8)] for y in range(8)]
         self.pieces[3][3] = self.canvas.create_oval(0, 0, 0, 0, fill="white", tags=("piece","white"))
         self.pieces[3][4] = self.canvas.create_oval(0, 0, 0, 0, fill="black", tags=("piece","black"))
@@ -50,6 +51,7 @@ class Reversi:
 
     # Redraw the board
     def draw(self, event):
+
         width = self.canvas.winfo_width() - 1
         height = self.canvas.winfo_height() - 1
         for i in range(8):
