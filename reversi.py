@@ -6,6 +6,7 @@ import copy
 class Reversi:
     board = []
     pieces = []
+    state = []
     previewPiece = None
     turn = "white"
     validPositions = []
@@ -24,7 +25,7 @@ class Reversi:
 
         labelframe = tk.Frame()
         self.whiteScore = tk.Label(labelframe,text="White Score: 2", relief=SUNKEN)
-        self.blackScore = tk.Label(labelframe,text=" || Black Score: 2", relief=SUNKEN)
+        self.blackScore = tk.Label(labelframe,text="Black Score: 2", relief=SUNKEN)
         # Turn Label
         self.turnLabel = tk.Label(labelframe, text="",relief=SUNKEN)
 
@@ -54,10 +55,15 @@ class Reversi:
         self.turn = "white"
         self.canvas.delete("piece") #Added to delete all the pieces when we click new game. 
         self.pieces = [[None for x in range(8)] for y in range(8)]
+        self.state = [[None for x in range(8)] for y in range(8)]
         self.pieces[3][3] = self.canvas.create_oval(0, 0, 0, 0, fill="white", tags=("piece","white"))
+        self.state[3][3] = "white"
         self.pieces[3][4] = self.canvas.create_oval(0, 0, 0, 0, fill="black", tags=("piece","black"))
+        self.state[3][4] = "black"
         self.pieces[4][3] = self.canvas.create_oval(0, 0, 0, 0, fill="black", tags=("piece","black"))
+        self.state[4][3] = "black"
         self.pieces[4][4] = self.canvas.create_oval(0, 0, 0, 0, fill="white", tags=("piece","white"))
+        self.state[4][4] = "white"
         self.canvas.tag_bind("piece", "<Enter>", self.onEnter)
         self.toggleTurn()
         self.draw(None)
@@ -142,8 +148,9 @@ class Reversi:
             self.toggleTurn()
         elif len(self.validPositions) == 0 and stop == True:
             self.displayWinner()
-        if self.turn == self.ai:
-            self.aiTurn()
+        # if self.turn == self.ai:
+        #     self.aiTurn()
+
     # Checks if a position is valid
     def validPosition(self, x, y):
         piece = self.pieces[x][y]
@@ -156,7 +163,9 @@ class Reversi:
                             if nextPiece is not None and self.canvas.gettags(nextPiece)[1] != self.turn:
                                     k = 2
                                     while 0 <= x+(i*k) < 8 and 0<=y+(j*k)<8:
-                                        if self.pieces[x+(i*k)][y+(j*k)] is not None and self.canvas.gettags(self.pieces[x+(i*k)][y+(j*k)])[1] == self.turn:
+                                        if self.pieces[x+(i*k)][y+(j*k)] is None:
+                                            k = 9
+                                        elif self.canvas.gettags(self.pieces[x+(i*k)][y+(j*k)])[1] == self.turn:
                                             return True
                                         k+=1
         return False
@@ -224,7 +233,9 @@ class Reversi:
             for i in range(len(node.reversi.validPositions)):
                 x = node.reversi.validPositions[i][0]
                 y = node.reversi.validPositions[i][1]
-                newNode = Node(node.reversi.placePieceAndReverseColors(x,y))
+                newNode = Node(node.reversi)
+                newNode.reversi.placePieceAndReverseColors(x,y)
+                newNode.reversi.toggleTurn()
                 v = max(v,self.alphabeta(newNode,depth-1,alpha, beta, not maximizingPlayer))
                 alpha = max(alpha,v)
                 if beta <= alpha:
@@ -244,10 +255,15 @@ class Reversi:
         return
 
 class Node:
-    reversi = None
+    pieces = []
+    validPositions = []
+    turn = "Black"
 
-    def __init__(self, reversi):
-        self.reversi = copy.deepcopy(reversi)
+    def __init__(self, pieces, validPositions, turn):
+        self.pieces = copy.deepcopy(pieces)
+        self.validPositions = copy.deepcopy(validPositions)
+        self.turn = copy.deepcopy(turn)
+
 
 if __name__ == '__main__':
     # Initialize GUI
