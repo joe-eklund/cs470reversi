@@ -2,6 +2,7 @@ from Tkinter import *
 import Tkinter as tk
 import tkMessageBox
 import copy
+import threading
 
 class Reversi:
     board = []
@@ -11,6 +12,8 @@ class Reversi:
     turn = "white"
     validPositions = []
     ai = "black"
+    thread = None
+    stopThread = False
 
     def __init__(self, master):
         self.debug = True
@@ -52,6 +55,8 @@ class Reversi:
     # Bring the board to it's starting state
     def initializeBoard(self):
         if self.debug: print 'Initializing board.'
+        if self.thread is not None:
+            self.stopThread = True
         self.turn = "white"
         self.canvas.delete("piece") #Added to delete all the pieces when we click new game. 
         self.pieces = [[None for x in range(8)] for y in range(8)]
@@ -126,6 +131,7 @@ class Reversi:
     # Change the turn from white to black or black to white
     def toggleTurn(self):
         if self.debug: print 'Toggling turn.'
+        self.score()
         if self.turn == "white":
             self.turnLabel.config(text="Black player's turn.")
             self.turn = "black"
@@ -149,7 +155,9 @@ class Reversi:
         elif len(self.validPositions) == 0 and stop == True:
             self.displayWinner()
         if self.turn == self.ai:
-            self.aiTurn()
+            self.thread = threading.Thread(target=self.aiTurn)
+            self.thread.daemon = True
+            self.thread.start()
 
     # Checks if a position is valid
     def validPosition(self, x, y):
@@ -222,9 +230,16 @@ class Reversi:
 
     # AI turn
     def aiTurn(self):
+        # Disable user interaction during ai's turn
+        self.canvas.tag_unbind("rectangle", "<Enter>")
+        self.canvas.tag_unbind("rectangle", "<Button-1>")
+
         root = Node(self.state, self.validPositions, self.turn)
 
         value = self.alphabeta(root,10,-sys.maxint,sys.maxint,True)
+        if self.stopThread:
+            self.stopThread = False
+            return
         for i in range(len(self.validPositions)):
             child = Node(self.state, self.validPositions,self.turn)
             x = child.validPositions[i][0]
@@ -232,12 +247,20 @@ class Reversi:
             child.placePieceAndReverseColors(x,y)
             child.toggleTurn()
             child_value = self.alphabeta(child, 9, -sys.maxint, sys.maxint, False)
+            if self.stopThread:
+                self.stopThread = False
+                return
             if child_value == value:
                 self.placePieceAndReverseColors(x, y)
                 self.draw(None)
                 self.toggleTurn()
-                return
+                break
+
+        # Re-enable user interation
+        self.canvas.tag_bind("rectangle", "<Enter>", self.onEnter)
+        self.canvas.tag_bind("rectangle", "<Button-1>", self.selectPosition)
         print "Best score: " + str(value)
+
     # Pruning
     def alphabeta(self,node, depth, alpha, beta, maximizingPlayer):
         if depth == 0 or len(node.validPositions) == 0:
