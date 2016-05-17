@@ -148,8 +148,8 @@ class Reversi:
             self.toggleTurn()
         elif len(self.validPositions) == 0 and stop == True:
             self.displayWinner()
-        # if self.turn == self.ai:
-        #     self.aiTurn()
+        if self.turn == self.ai:
+            self.aiTurn()
 
     # Checks if a position is valid
     def validPosition(self, x, y):
@@ -159,13 +159,13 @@ class Reversi:
                 if x+i >= 0 and x+i < 8:
                     for j in range(-1,2):
                         if y+j >= 0 and y+j < 8:
-                            nextPiece = self.pieces[x+i][y+j]
-                            if nextPiece is not None and self.canvas.gettags(nextPiece)[1] != self.turn:
+                            nextPiece = self.state[x+i][y+j]
+                            if nextPiece is not None and nextPiece != self.turn:
                                     k = 2
                                     while 0 <= x+(i*k) < 8 and 0<=y+(j*k)<8:
-                                        if self.pieces[x+(i*k)][y+(j*k)] is None:
+                                        if self.state[x+(i*k)][y+(j*k)] is None:
                                             k = 9
-                                        elif self.canvas.gettags(self.pieces[x+(i*k)][y+(j*k)])[1] == self.turn:
+                                        elif self.state[x+(i*k)][y+(j*k)] == self.turn:
                                             return True
                                         k+=1
         return False
@@ -180,20 +180,22 @@ class Reversi:
                         if 0<=y+j<8:
                             validPath = False
                             k = 1
-                            nextPiece = self.pieces[x+(i*k)][y+(j*k)]
-                            while nextPiece is not None and self.canvas.gettags(nextPiece)[1] != self.turn and 0 <= x+(i*k) < 8 and 0<=y+(j*k)<8:
+                            nextPiece = self.state[x+(i*k)][y+(j*k)]
+                            while nextPiece is not None and nextPiece != self.turn and 0 <= x+(i*k) < 8 and 0<=y+(j*k)<8:
                                 k+=1
                                 if 0 <= x+(i*k) < 8 and 0<=y+(j*k)<8:
-                                    nextPiece = self.pieces[x+(i*k)][y+(j*k)]
+                                    nextPiece = self.state[x+(i*k)][y+(j*k)]
                                 else:
                                     nextPiece = None
-                            if nextPiece is not None and self.canvas.gettags(nextPiece)[1] == self.turn:
+                            if nextPiece is not None and nextPiece == self.turn:
                                 self.pieces[x][y] = self.canvas.create_oval(0,0,0,0,fill=self.turn,tags=("piece",self.turn))
+                                self.state[x][y] = self.turn
                                 for l in range(1,k):
                                     currentPiece = self.pieces[x+(i*l)][y+(j*l)]
                                     self.canvas.delete(currentPiece)
                                     self.pieces[x+(i*l)][y+(j*l)] = None
                                     self.pieces[x+(i*l)][y+(j*l)] = self.canvas.create_oval(0,0,0,0,fill=self.turn,tags=("piece",self.turn))
+                                    self.state[x+(i*l)][y+(j*l)] = self.turn
 
     def score(self):
         whiteCount = 0
@@ -220,34 +222,45 @@ class Reversi:
 
     # AI turn
     def aiTurn(self):
-        root = Node(self)
+        root = Node(self.state, self.validPositions, self.turn)
 
         value = self.alphabeta(root,5,-sys.maxint,sys.maxint,True)
+        for i in range(len(self.validPositions)):
+            child = Node(self.state, self.validPositions,self.turn)
+            child_value = self.alphabeta(child, 4, -sys.maxint, sys.maxint, False)
+            if child_value == value:
+                self.placePieceAndReverseColors(self.validPositions[i][0],self.validPositions[i][1])
+                self.draw(None)
+                self.toggleTurn()
+                return
+        print "Best score: " + str(value)
     # Pruning
     def alphabeta(self,node, depth, alpha, beta, maximizingPlayer):
-        if depth == 0 or len(node.reversi.validPositions) == 0:
-            whiteCount,blackCount = node.reversi.score()
+        if depth == 0 or len(node.validPositions) == 0:
+            whiteCount,blackCount = node.score()
             return blackCount - whiteCount
         if maximizingPlayer:
             v = -sys.maxint
-            for i in range(len(node.reversi.validPositions)):
-                x = node.reversi.validPositions[i][0]
-                y = node.reversi.validPositions[i][1]
-                newNode = Node(node.reversi)
-                newNode.reversi.placePieceAndReverseColors(x,y)
-                newNode.reversi.toggleTurn()
-                v = max(v,self.alphabeta(newNode,depth-1,alpha, beta, not maximizingPlayer))
-                alpha = max(alpha,v)
+            for i in range(len(node.validPositions)):
+                x = node.validPositions[i][0]
+                y = node.validPositions[i][1]
+                newNode = Node(self.state, self.validPositions, self.turn)
+                newNode.placePieceAndReverseColors(x, y)
+                newNode.toggleTurn()
+                v = max(v,self.alphabeta(newNode, depth-1, alpha, beta, not maximizingPlayer))
+                alpha = max(alpha, v)
                 if beta <= alpha:
                     break
             return v
         else:
             v = sys.maxint
-            for i in range(len(node.reversi.validPositions)):
-                x = node.reversi.validPositions[i][0]
-                y = node.reversi.validPositions[i][1]
-                newNode = Node(node.reversi.placePieceAndReverseColors(x,y))
-                v = min(v, self.alphabeta(node,depth-1,alpha, beta, not maximizingPlayer))
+            for i in range(len(node.validPositions)):
+                x = node.validPositions[i][0]
+                y = node.validPositions[i][1]
+                newNode = Node(self.state, self.validPositions, self.turn)
+                newNode.placePieceAndReverseColors(x, y)
+                newNode.toggleTurn()
+                v = min(v, self.alphabeta(node, depth-1, alpha, beta, not maximizingPlayer))
                 beta = min(beta,v)
                 if beta <= alpha:
                     break
@@ -255,15 +268,78 @@ class Reversi:
         return
 
 class Node:
-    pieces = []
+    state = []
     validPositions = []
     turn = "Black"
 
-    def __init__(self, pieces, validPositions, turn):
-        self.pieces = copy.deepcopy(pieces)
+    def __init__(self, state, validPositions, turn):
+        self.state = copy.deepcopy(state)
         self.validPositions = copy.deepcopy(validPositions)
         self.turn = copy.deepcopy(turn)
 
+    # Checks if a position is valid
+    def validPosition(self, x, y):
+        piece = self.state[x][y]
+        if piece is None:
+            for i in range(-1, 2):
+                if x + i >= 0 and x + i < 8:
+                    for j in range(-1, 2):
+                        if y + j >= 0 and y + j < 8:
+                            nextPiece = self.state[x + i][y + j]
+                            if nextPiece is not None and nextPiece != self.turn:
+                                k = 2
+                                while 0 <= x + (i * k) < 8 and 0 <= y + (j * k) < 8:
+                                    if self.state[x + (i * k)][y + (j * k)] is None:
+                                        k = 9
+                                    elif self.state[x + (i * k)][y + (j * k)] == self.turn:
+                                        return True
+                                    k += 1
+        return False
+
+    # Places the piece and reverses appropriate pieces
+    def placePieceAndReverseColors(self, x, y):
+        # Change in x
+        for i in range(-1, 2):
+            if 0 <= x + i < 8:
+                # Change in y
+                for j in range(-1, 2):
+                    if 0 <= y + j < 8:
+                        validPath = False
+                        k = 1
+                        nextPiece = self.state[x + (i * k)][y + (j * k)]
+                        while nextPiece is not None and nextPiece != self.turn and 0 <= x + (
+                            i * k) < 8 and 0 <= y + (j * k) < 8:
+                            k += 1
+                            if 0 <= x + (i * k) < 8 and 0 <= y + (j * k) < 8:
+                                nextPiece = self.state[x + (i * k)][y + (j * k)]
+                            else:
+                                nextPiece = None
+                        if nextPiece is not None and nextPiece == self.turn:
+                            self.state[x][y] = self.turn
+                            for l in range(1, k):
+                                self.state[x + (i * l)][y + (j * l)] = self.turn
+    def toggleTurn(self):
+        self.validPositions = []
+        for i in range(8):
+            for j in range(8):
+                if self.validPosition(i, j):
+                    self.validPositions.append([i, j])
+        if self.turn == "white":
+            self.turn == "black"
+        else:
+            self.turn = "white"
+
+    def score(self):
+        whiteCount = 0
+        blackCount = 0
+        for x in range(8):
+            for y in range(8):
+                if self.state[x][y] is not None:
+                    if self.state[x][y] == "white":
+                        whiteCount += 1
+                    else:
+                        blackCount += 1
+        return whiteCount, blackCount
 
 if __name__ == '__main__':
     # Initialize GUI
