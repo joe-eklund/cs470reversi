@@ -224,12 +224,16 @@ class Reversi:
     def aiTurn(self):
         root = Node(self.state, self.validPositions, self.turn)
 
-        value = self.alphabeta(root,5,-sys.maxint,sys.maxint,True)
+        value = self.alphabeta(root,10,-sys.maxint,sys.maxint,True)
         for i in range(len(self.validPositions)):
             child = Node(self.state, self.validPositions,self.turn)
-            child_value = self.alphabeta(child, 4, -sys.maxint, sys.maxint, False)
+            x = child.validPositions[i][0]
+            y = child.validPositions[i][1]
+            child.placePieceAndReverseColors(x,y)
+            child.toggleTurn()
+            child_value = self.alphabeta(child, 9, -sys.maxint, sys.maxint, False)
             if child_value == value:
-                self.placePieceAndReverseColors(self.validPositions[i][0],self.validPositions[i][1])
+                self.placePieceAndReverseColors(x, y)
                 self.draw(None)
                 self.toggleTurn()
                 return
