@@ -1,8 +1,8 @@
-from Tkinter import *
-import Tkinter as tk
+from mtTkinter import *
 import tkMessageBox
 import copy
 import threading
+import os
 
 class Reversi:
     board = []
@@ -23,6 +23,11 @@ class Reversi:
         self.master = master
         master.title("Reversi")
 
+        def close():
+            master.destroy()
+            os._exit(0)
+        master.protocol('WM_DELETE_WINDOW', close)
+
         # New game button
         self.var = StringVar()
         self.var.set(self.ai)
@@ -30,16 +35,16 @@ class Reversi:
         self.var2.set(self.ai2)
         self.varNumPlayers = StringVar()
         self.varNumPlayers.set(self.numPlayers)
-        self.buttonframe = tk.Frame()
+        self.buttonframe = Frame()
         self.greet_button = Button(self.buttonframe, text="Start New Game", command=self.newGame)
         self.greet_button.grid(row=0, column=0)
         self.buttonframe.pack()
 
-        labelframe = tk.Frame()
-        self.whiteScore = tk.Label(labelframe,text="White Score: 2", relief=SUNKEN)
-        self.blackScore = tk.Label(labelframe,text="Black Score: 2", relief=SUNKEN)
+        labelframe = Frame()
+        self.whiteScore = Label(labelframe,text="White Score: 2", relief=SUNKEN)
+        self.blackScore = Label(labelframe,text="Black Score: 2", relief=SUNKEN)
         # Turn Label
-        self.turnLabel = tk.Label(labelframe, text="",relief=SUNKEN)
+        self.turnLabel = Label(labelframe, text="",relief=SUNKEN)
 
         self.whiteScore.grid(row=0, column=0)
         self.turnLabel.grid(row=0, column=1)
@@ -162,7 +167,7 @@ class Reversi:
             self.toggleTurn()
         elif len(self.validPositions) == 0 and stop == True:
             self.displayWinner()
-        if self.turn == self.ai:
+        elif self.turn == self.ai:
             thread = threading.Thread(target=self.aiTurn)
             thread.daemon = True
             thread.start()
@@ -170,6 +175,10 @@ class Reversi:
             thread = threading.Thread(target=self.aiTurn2)
             thread.daemon = True
             thread.start()
+        else:
+            # Re-enable user interation
+            self.canvas.tag_bind("rectangle", "<Motion>", self.onEnter)
+            self.canvas.tag_bind("rectangle", "<Button-1>", self.selectPosition)
 
     # Checks if a position is valid
     def validPosition(self, x, y):
@@ -255,17 +264,17 @@ class Reversi:
         #This is the window overlay
         self.t = Toplevel()
         self.t.wm_title("Setup a new game.")
-        #l = tk.Label(t, text="Select the number of players.")
+        #l = Label(t, text="Select the number of players.")
 
-        self.buttonFrameNewGame = tk.Frame(self.t)
+        self.buttonFrameNewGame = Frame(self.t)
         #Number of Players
-        self.playerSelection = tk.Label(self.buttonFrameNewGame, text="Human Players:")
+        self.playerSelection = Label(self.buttonFrameNewGame, text="Human Players:")
         self.radioZero = Radiobutton(self.buttonFrameNewGame, text="Zero", variable=self.varNumPlayers, value="zero", command=sel)
         self.radioOne = Radiobutton(self.buttonFrameNewGame, text="One", variable=self.varNumPlayers, value="one", command=sel)
         self.radioTwo = Radiobutton(self.buttonFrameNewGame, text="Two", variable=self.varNumPlayers, value="two", command=sel)
         
         #AI selection
-        self.aiSelection = tk.Label(self.buttonFrameNewGame, text="AI:")
+        self.aiSelection = Label(self.buttonFrameNewGame, text="AI Color:")
         self.radioBlack = Radiobutton(self.buttonFrameNewGame, text="Black", variable=self.var, value="black", command=sel)
         self.radioWhite = Radiobutton(self.buttonFrameNewGame, text="White", variable=self.var, value="white", command=sel)
         self.okNewGame = Button(self.buttonFrameNewGame, text="OK", command=self.initializeBoard)
@@ -318,10 +327,6 @@ class Reversi:
             self.draw(None)
             self.toggleTurn()
 
-        # Re-enable user interation
-        self.canvas.tag_bind("rectangle", "<Motion>", self.onEnter)
-        self.canvas.tag_bind("rectangle", "<Button-1>", self.selectPosition)
-
      # AI2 turn
     def aiTurn2(self):
         # Disable user interaction during ai's turn
@@ -337,10 +342,6 @@ class Reversi:
             self.placePieceAndReverseColors(position[0], position[1])
             self.draw(None)
             self.toggleTurn()
-
-        # Re-enable user interation
-        self.canvas.tag_bind("rectangle", "<Motion>", self.onEnter)
-        self.canvas.tag_bind("rectangle", "<Button-1>", self.selectPosition)
 
     # Pruning
     def alphabeta(self,node, depth, alpha, beta, maximizingPlayer):
