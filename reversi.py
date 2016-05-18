@@ -275,9 +275,7 @@ class Reversi:
         self.radioBlack.grid(row=1, column=1)
         self.radioWhite.grid(row=1, column=2)
         self.okNewGame.grid(row=2,column=3)
-        if(self.numPlayers == "two" or self.numPlayers == "zero" ):
-            self.radioBlack.config(state=DISABLED)
-            self.radioWhite.config(state=DISABLED)
+        sel()
         self.buttonFrameNewGame.pack(side="top", fill="both", expand=True, padx=10, pady=10)
         self.t.transient(root)
         self.t.grab_set()
