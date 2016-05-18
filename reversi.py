@@ -12,6 +12,9 @@ class Reversi:
     turn = "white"
     validPositions = []
     ai = "black"
+    ai2 = None
+    t = None
+    numPlayers = "zero"
 
     def __init__(self, master):
         self.debug = True
@@ -23,17 +26,13 @@ class Reversi:
         # New game button
         self.var = StringVar()
         self.var.set(self.ai)
-        def sel():
-            self.ai = self.var.get()
+        self.var2 = StringVar()
+        self.var2.set(self.ai2)
+        self.varNumPlayers = StringVar()
+        self.varNumPlayers.set(self.numPlayers)
         self.buttonframe = tk.Frame()
-        self.greet_button = Button(self.buttonframe, text="Start New Game", command=self.initializeBoard)
-        self.aisel = tk.Label(self.buttonframe, text=" AI:")
-        self.radio1 = Radiobutton(self.buttonframe, text="Black", variable=self.var, value="black", command=sel)
-        self.radio2 = Radiobutton(self.buttonframe, text="White", variable=self.var, value="white", command=sel)
+        self.greet_button = Button(self.buttonframe, text="Start New Game", command=self.newGame)
         self.greet_button.grid(row=0, column=0)
-        self.aisel.grid(row=0, column=1)
-        self.radio1.grid(row=0, column=2)
-        self.radio2.grid(row=0, column=3)
         self.buttonframe.pack()
 
         labelframe = tk.Frame()
@@ -64,6 +63,7 @@ class Reversi:
 
     # Bring the board to it's starting state
     def initializeBoard(self):
+        self.delNewGameWin()
         if self.debug: print 'Initializing board.'
         self.turn = "white"
         self.canvas.delete("piece") #Added to delete all the pieces when we click new game. 
@@ -166,6 +166,10 @@ class Reversi:
             thread = threading.Thread(target=self.aiTurn)
             thread.daemon = True
             thread.start()
+        elif self.turn == self.ai2:
+            thread = threading.Thread(target=self.aiTurn2)
+            thread.daemon = True
+            thread.start()
 
     # Checks if a position is valid
     def validPosition(self, x, y):
@@ -227,6 +231,63 @@ class Reversi:
         self.blackScore.config(text="Black Score: " + str(blackCount), relief=SUNKEN)
         return whiteCount,blackCount
 
+    def newGame(self):
+
+        def sel():
+            self.numPlayers = self.varNumPlayers.get()
+            if(self.numPlayers == "zero"):
+                self.ai = "black"
+                self.ai2 = "white"
+                self.radioBlack.config(state=DISABLED)
+                self.radioWhite.config(state=DISABLED)
+            elif(self.numPlayers == "one"):
+                self.ai = self.var.get()
+                self.ai2 = None
+                self.radioBlack.config(state=NORMAL)
+                self.radioWhite.config(state=NORMAL)
+            else: 
+                self.ai = None
+                self.ai2 = None
+                self.radioBlack.config(state=DISABLED)
+                self.radioWhite.config(state=DISABLED)
+        self.t = Toplevel()
+        self.t.wm_title("Setup a new game.")
+        #l = tk.Label(t, text="Select the number of players.")
+
+        self.buttonFrameNewGame = tk.Frame(self.t)
+        #Number of Players
+        self.playerSelection = tk.Label(self.buttonFrameNewGame, text="Human Players:")
+        self.radioZero = Radiobutton(self.buttonFrameNewGame, text="Zero", variable=self.varNumPlayers, value="zero", command=sel)
+        self.radioOne = Radiobutton(self.buttonFrameNewGame, text="One", variable=self.varNumPlayers, value="one", command=sel)
+        self.radioTwo = Radiobutton(self.buttonFrameNewGame, text="Two", variable=self.varNumPlayers, value="two", command=sel)
+        
+        #AI selection
+        self.aiSelection = tk.Label(self.buttonFrameNewGame, text="AI:")
+        self.radioBlack = Radiobutton(self.buttonFrameNewGame, text="Black", variable=self.var, value="black", command=sel)
+        self.radioWhite = Radiobutton(self.buttonFrameNewGame, text="White", variable=self.var, value="white", command=sel)
+        self.okNewGame = Button(self.buttonFrameNewGame, text="OK", command=self.initializeBoard)
+
+        self.playerSelection.grid(row=0, column=0)
+        self.radioZero.grid(row=0,column=1)
+        self.radioOne.grid(row=0,column=2)
+        self.radioTwo.grid(row=0,column=3)
+        self.aiSelection.grid(row=1, column=0)
+        self.radioBlack.grid(row=1, column=1)
+        self.radioWhite.grid(row=1, column=2)
+        self.okNewGame.grid(row=2,column=3)
+        if(self.numPlayers == "two" or self.numPlayers == "zero" ):
+            self.radioBlack.config(state=DISABLED)
+            self.radioWhite.config(state=DISABLED)
+        self.buttonFrameNewGame.pack(side="top", fill="both", expand=True, padx=10, pady=10)
+        self.t.transient(root)
+        self.t.grab_set()
+        root.wait_window(self.t)
+        
+    def delNewGameWin(self):
+        if self.t is not None: 
+            self.t.destroy()
+            self.t = None
+
     def displayWinner(self):
         whiteCount, blackCount = self.score()
         if(whiteCount > blackCount):
@@ -244,6 +305,26 @@ class Reversi:
 
         root = Node(self.state, self.validPositions, self.turn)
         value, position = self.alphabeta(root, 5, -sys.maxint, sys.maxint, self.ai)
+        print "best value:", value
+        print "alphabeta position: ", position
+
+        if root.state == self.state:
+            self.placePieceAndReverseColors(position[0], position[1])
+            self.draw(None)
+            self.toggleTurn()
+
+        # Re-enable user interation
+        self.canvas.tag_bind("rectangle", "<Motion>", self.onEnter)
+        self.canvas.tag_bind("rectangle", "<Button-1>", self.selectPosition)
+
+     # AI2 turn
+    def aiTurn2(self):
+        # Disable user interaction during ai's turn
+        self.canvas.tag_unbind("rectangle", "<Motion>")
+        self.canvas.tag_unbind("rectangle", "<Button-1>")
+
+        root = Node(self.state, self.validPositions, self.turn)
+        value, position = self.alphabeta(root, 5, -sys.maxint, sys.maxint, self.ai2)
         print "best value:", value
         print "alphabeta position: ", position
 
