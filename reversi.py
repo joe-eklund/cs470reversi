@@ -346,7 +346,7 @@ class Reversi:
                 elif diff > 0:
                     return sys.maxint, None
                 return diff, None
-            return -self.alphabeta(node, depth-1, -beta, -alpha, opponent)[0], None
+            return -self.alphabeta(newNode, depth-1, -beta, -alpha, opponent)[0], None
 
         best_move = node.validPositions[0]
         for i in range(len(node.validPositions)):
