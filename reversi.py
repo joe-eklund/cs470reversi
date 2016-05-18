@@ -168,12 +168,8 @@ class Reversi:
             self.toggleTurn()
         elif len(self.validPositions) == 0 and stop == True:
             self.displayWinner()
-        elif self.turn == self.ai:
+        elif self.turn == self.ai or self.turn == self.ai2:
             thread = threading.Thread(target=self.aiTurn)
-            thread.daemon = True
-            thread.start()
-        elif self.turn == self.ai2:
-            thread = threading.Thread(target=self.aiTurn2)
             thread.daemon = True
             thread.start()
         else:
@@ -320,23 +316,7 @@ class Reversi:
         self.canvas.tag_unbind("rectangle", "<Button-1>")
 
         root = Node(self.state, self.validPositions, self.turn)
-        value, position = self.alphabeta(root, self.lookahead, -sys.maxint, sys.maxint, self.ai)
-        print "best value:", value
-        print "alphabeta position: ", position
-
-        if root.state == self.state:
-            self.placePieceAndReverseColors(position[0], position[1])
-            self.draw(None)
-            self.toggleTurn()
-
-     # AI2 turn
-    def aiTurn2(self):
-        # Disable user interaction during ai's turn
-        self.canvas.tag_unbind("rectangle", "<Motion>")
-        self.canvas.tag_unbind("rectangle", "<Button-1>")
-
-        root = Node(self.state, self.validPositions, self.turn)
-        value, position = self.alphabeta(root, self.lookahead, -sys.maxint, sys.maxint, self.ai2)
+        value, position = self.alphabeta(root, self.lookahead, -sys.maxint, sys.maxint, self.turn)
         print "best value:", value
         print "alphabeta position: ", position
 
