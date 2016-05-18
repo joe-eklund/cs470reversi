@@ -15,6 +15,7 @@ class Reversi:
     ai2 = None
     t = None
     numPlayers = "zero"
+    lookahead = 5
 
     def __init__(self, master):
         self.debug = True
@@ -319,7 +320,7 @@ class Reversi:
         self.canvas.tag_unbind("rectangle", "<Button-1>")
 
         root = Node(self.state, self.validPositions, self.turn)
-        value, position = self.alphabeta(root, 5, -sys.maxint, sys.maxint, self.ai)
+        value, position = self.alphabeta(root, self.lookahead, -sys.maxint, sys.maxint, self.ai)
         print "best value:", value
         print "alphabeta position: ", position
 
@@ -335,7 +336,7 @@ class Reversi:
         self.canvas.tag_unbind("rectangle", "<Button-1>")
 
         root = Node(self.state, self.validPositions, self.turn)
-        value, position = self.alphabeta(root, 5, -sys.maxint, sys.maxint, self.ai2)
+        value, position = self.alphabeta(root, self.lookahead, -sys.maxint, sys.maxint, self.ai2)
         print "best value:", value
         print "alphabeta position: ", position
 
@@ -346,18 +347,15 @@ class Reversi:
 
     # Pruning
     def alphabeta(self,node, depth, alpha, beta, maximizingPlayer):
-        diff = 0
         opponent = ""
-        whiteCount, blackCount = node.score()
+        diff, weightedDiff = node.scoreDiff(maximizingPlayer)
         if (maximizingPlayer == "black"):
-            diff = blackCount - whiteCount
             opponent = "white"
         else:
-            diff = whiteCount - blackCount
             opponent = "black"
 
         if depth == 0:
-            return diff, None
+            return weightedDiff, None
 
         if len(node.validPositions) == 0:
             newNode = Node(node.state, node.validPositions, node.turn)
@@ -458,6 +456,42 @@ class Node:
                     else:
                         blackCount += 1
         return whiteCount, blackCount
+
+    def scoreDiff(self, player):
+        whiteCount = 0
+        blackCount = 0
+        whiteWeightCount = 0
+        blackWeightCount = 0
+
+        for x in range(8):
+            for y in range(8):
+                if self.state[x][y] is not None:
+                    if self.state[x][y] == "white":
+                        whiteCount += 1
+                        whiteWeightCount += SQUARE_WEIGHTS[x][y]
+                    else:
+                        blackCount += 1
+                        blackWeightCount += SQUARE_WEIGHTS[x][y]
+
+        if (player == "black"):
+            diff = blackCount - whiteCount
+            weightedDiff = blackWeightCount - whiteWeightCount
+        else:
+            diff = whiteCount - blackCount
+            weightedDiff = whiteWeightCount - blackWeightCount
+
+        return diff, weightedDiff
+
+SQUARE_WEIGHTS = [
+    [120, -20, 20, 5, 5, 20, -20, 120],
+    [-20, -40, -5, -5, -5, -5, -40, -20],
+    [20, -5, 15, 3, 3, 15, -5, 20],
+    [5, -5, 3, 3, 3, 3, -5, 5],
+    [5, -5, 3, 3, 3, 3, -5, 5],
+    [20, -5, 15, 3, 3, 15, -5, 20],
+    [-20, -40, -5, -5, -5, -5, -40, -20],
+    [120, -20, 20, 5, 5, 20, -20, 120],
+]
 
 if __name__ == '__main__':
     # Initialize GUI
