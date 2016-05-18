@@ -231,8 +231,10 @@ class Reversi:
         self.blackScore.config(text="Black Score: " + str(blackCount), relief=SUNKEN)
         return whiteCount,blackCount
 
+    #This is called when Start New game is clicked
     def newGame(self):
 
+        #Used for updating the values for players selected and AI selected
         def sel():
             self.numPlayers = self.varNumPlayers.get()
             if(self.numPlayers == "zero"):
@@ -250,6 +252,7 @@ class Reversi:
                 self.ai2 = None
                 self.radioBlack.config(state=DISABLED)
                 self.radioWhite.config(state=DISABLED)
+        #This is the window overlay
         self.t = Toplevel()
         self.t.wm_title("Setup a new game.")
         #l = tk.Label(t, text="Select the number of players.")
@@ -267,6 +270,7 @@ class Reversi:
         self.radioWhite = Radiobutton(self.buttonFrameNewGame, text="White", variable=self.var, value="white", command=sel)
         self.okNewGame = Button(self.buttonFrameNewGame, text="OK", command=self.initializeBoard)
 
+        #Adding to grid of new window
         self.playerSelection.grid(row=0, column=0)
         self.radioZero.grid(row=0,column=1)
         self.radioOne.grid(row=0,column=2)
@@ -275,12 +279,15 @@ class Reversi:
         self.radioBlack.grid(row=1, column=1)
         self.radioWhite.grid(row=1, column=2)
         self.okNewGame.grid(row=2,column=3)
+        #Call sel to make sure our default values are set
         sel()
         self.buttonFrameNewGame.pack(side="top", fill="both", expand=True, padx=10, pady=10)
+        #Used to give the new game window priority and not allow intereaction with the main window
         self.t.transient(root)
         self.t.grab_set()
         root.wait_window(self.t)
         
+    #This kills the new game window when we click ok
     def delNewGameWin(self):
         if self.t is not None: 
             self.t.destroy()
