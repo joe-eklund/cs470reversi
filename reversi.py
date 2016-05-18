@@ -265,11 +265,11 @@ class Reversi:
         self.radioTwo = Radiobutton(self.buttonFrameNewGame, text="Two", variable=self.varNumPlayers, value="two", command=sel)
         
         #AI selection
-        self.aiSelection = tk.Label(self.buttonFrameNewGame, text="AI:")
+        self.aiSelection = tk.Label(self.buttonFrameNewGame, text="AI Color:")
         self.radioBlack = Radiobutton(self.buttonFrameNewGame, text="Black", variable=self.var, value="black", command=sel)
         self.radioWhite = Radiobutton(self.buttonFrameNewGame, text="White", variable=self.var, value="white", command=sel)
         self.okNewGame = Button(self.buttonFrameNewGame, text="OK", command=self.initializeBoard)
-
+        self.cancelNewGame = Button(self.buttonFrameNewGame, text="Cancel", command=self.delNewGameWin)
         #Adding to grid of new window
         self.playerSelection.grid(row=0, column=0)
         self.radioZero.grid(row=0,column=1)
@@ -278,6 +278,7 @@ class Reversi:
         self.aiSelection.grid(row=1, column=0)
         self.radioBlack.grid(row=1, column=1)
         self.radioWhite.grid(row=1, column=2)
+        self.cancelNewGame.grid(row=2, column=2)
         self.okNewGame.grid(row=2,column=3)
         #Call sel to make sure our default values are set
         sel()
